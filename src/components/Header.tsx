@@ -1,8 +1,20 @@
-import { Search, Bell, Menu, Heart } from "lucide-react";
+import { Search, Bell, Menu, Heart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleAuthAction = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate('/auth');
+    }
+  };
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
       <div className="container mx-auto px-4 py-3">
@@ -38,13 +50,25 @@ export const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background"></span>
-            </Button>
-            <Button variant="default" className="bg-gradient-hero hover:opacity-90 transition-opacity">
-              <span className="hidden sm:inline">로그인</span>
-              <span className="sm:hidden">로그인</span>
+            {user && (
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background"></span>
+              </Button>
+            )}
+            <Button 
+              variant="default" 
+              className="bg-gradient-hero hover:opacity-90 transition-opacity"
+              onClick={handleAuthAction}
+            >
+              {user ? (
+                <>
+                  <LogOut className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">로그아웃</span>
+                </>
+              ) : (
+                <span>로그인</span>
+              )}
             </Button>
           </div>
         </div>
