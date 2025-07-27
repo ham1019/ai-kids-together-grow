@@ -11,7 +11,7 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [nickname, setNickname] = useState('');
+  const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { signIn, signUp, user } = useAuth();
@@ -33,15 +33,28 @@ export default function Auth() {
       if (isLogin) {
         result = await signIn(email, password);
       } else {
-        if (!nickname.trim()) {
+        if (!username.trim()) {
           toast({
-            title: "닉네임을 입력해주세요",
+            title: "사용자명을 입력해주세요",
             variant: "destructive"
           });
           setLoading(false);
           return;
         }
-        result = await signUp(email, password, nickname);
+        result = await signUp(email, password, username);
+        
+        // If signup successful, try to sign in immediately
+        if (!result.error) {
+          const signInResult = await signIn(email, password);
+          if (!signInResult.error) {
+            toast({
+              title: "회원가입 완료!",
+              description: "자동으로 로그인되었습니다"
+            });
+            setLoading(false);
+            return;
+          }
+        }
       }
 
       if (result.error) {
@@ -53,20 +66,24 @@ export default function Auth() {
           errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다";
         } else if (result.error.message.includes("Password should be")) {
           errorMessage = "비밀번호는 최소 6자 이상이어야 합니다";
+        } else if (result.error.message.includes("duplicate key")) {
+          errorMessage = "이미 사용 중인 사용자명입니다";
+        } else if (result.error.message.includes("Email not confirmed")) {
+          errorMessage = "이메일을 확인해주세요";
         }
 
         toast({
           title: errorMessage,
           variant: "destructive"
         });
-      } else if (!isLogin) {
+      } else if (isLogin) {
         toast({
-          title: "회원가입 완료!",
-          description: "로그인해주세요"
+          title: "로그인 성공!",
+          description: "환영합니다"
         });
-        setIsLogin(true);
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast({
         title: "네트워크 오류가 발생했습니다",
         variant: "destructive"
@@ -116,11 +133,11 @@ export default function Auth() {
 
             {!isLogin && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">닉네임</label>
+                <label className="text-sm font-medium">사용자명</label>
                 <Input
                   type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   placeholder="커뮤니티에서 사용할 이름"
                   required
                 />
@@ -139,7 +156,12 @@ export default function Auth() {
           <div className="mt-6 text-center">
             <Button 
               variant="ghost" 
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setEmail('');
+                setPassword('');
+                setUsername('');
+              }}
               className="text-sm"
             >
               {isLogin ? '계정이 없으신가요? 회원가입' : '이미 계정이 있으신가요? 로그인'}

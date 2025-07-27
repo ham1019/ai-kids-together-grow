@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signUp: (email: string, password: string, nickname: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, username: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -21,7 +21,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -38,32 +39,113 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, nickname: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          nickname: nickname
+  const createProfile = async (userId: string, username: string) => {
+    try {
+      console.log('Creating profile for user:', userId, username);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          username: username,
+          display_name: username,
+          is_public: true,
+        });
+
+      if (error) {
+        console.error('Error creating profile:', error);
+        return { error };
+      }
+
+      // Create user settings
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .insert({
+          id: userId,
+          email_notifications: true,
+          push_notifications: true,
+          theme: 'light',
+          language: 'ko',
+          timezone: 'Asia/Seoul',
+          privacy_level: 'public',
+        });
+
+      if (settingsError) {
+        console.error('Error creating user settings:', settingsError);
+        return { error: settingsError };
+      }
+
+      console.log('Profile and settings created successfully');
+      return { error: null };
+    } catch (error) {
+      console.error('Error in createProfile:', error);
+      return { error };
+    }
+  };
+
+  const signUp = async (email: string, password: string, username: string) => {
+    try {
+      console.log('Signing up user:', email, username);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        return { error };
+      }
+
+      console.log('Signup successful:', data);
+
+      // If signup successful, create profile immediately
+      if (data.user) {
+        const profileError = await createProfile(data.user.id, username);
+        if (profileError.error) {
+          console.error('Profile creation error:', profileError.error);
+          return { error: profileError.error };
         }
       }
-    });
-    return { error };
+
+      return { error: null };
+    } catch (error) {
+      console.error('Unexpected error in signUp:', error);
+      return { error };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      console.log('Signing in user:', email);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.error('Signin error:', error);
+      }
+      
+      return { error };
+    } catch (error) {
+      console.error('Unexpected error in signIn:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Signout error:', error);
+    }
   };
 
   const value = {

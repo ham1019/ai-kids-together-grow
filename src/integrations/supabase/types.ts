@@ -14,39 +14,283 @@ export type Database = {
   }
   public: {
     Tables: {
+      board: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: number
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          title?: string | null
+        }
+        Relationships: []
+      }
+      comments: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          parent_id: string | null
+          post_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          post_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_views: {
+        Row: {
+          id: string
+          post_id: string | null
+          user_id: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          post_id?: string | null
+          user_id?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string | null
+          category: string
+          comments_count: number | null
+          content: string
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          likes_count: number | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category: string
+          comments_count?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category?: string
+          comments_count?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          likes_count?: number | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
-          child_age: number | null
-          created_at: string
+          created_at: string | null
+          display_name: string | null
           id: string
-          interests: string[] | null
-          nickname: string | null
-          updated_at: string
-          user_id: string
+          is_public: boolean | null
+          location: string | null
+          updated_at: string | null
+          username: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
-          child_age?: number | null
-          created_at?: string
-          id?: string
-          interests?: string[] | null
-          nickname?: string | null
-          updated_at?: string
-          user_id: string
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          is_public?: boolean | null
+          location?: string | null
+          updated_at?: string | null
+          username: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
-          child_age?: number | null
-          created_at?: string
+          created_at?: string | null
+          display_name?: string | null
           id?: string
-          interests?: string[] | null
-          nickname?: string | null
-          updated_at?: string
-          user_id?: string
+          is_public?: boolean | null
+          location?: string | null
+          updated_at?: string | null
+          username?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      user_follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          language: string | null
+          privacy_level: string | null
+          push_notifications: boolean | null
+          theme: string | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id: string
+          language?: string | null
+          privacy_level?: string | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          language?: string | null
+          privacy_level?: string | null
+          push_notifications?: boolean | null
+          theme?: string | null
+          timezone?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -55,7 +299,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_post_view: {
+        Args: { post_uuid: string; user_uuid: string }
+        Returns: undefined
+      }
+      toggle_post_like: {
+        Args: { post_uuid: string; user_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
